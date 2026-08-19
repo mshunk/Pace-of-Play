@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17365D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Target Pace">
+<title>Target Pace of Play</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--navy:#17365D;--bg:#F7F7F5;--card:#fff;--text:#172033;--muted:#6D7480;--line:#D8DCE2;--soft:#EDF4F9;--turn:#FFF4CE;--finish:#E7F3E4}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.app{max-width:560px;margin:0 auto;padding:18px 14px 28px}.hero{background:var(--navy);color:#fff;border-radius:18px;padding:18px;margin-bottom:12px}
+.hero h1{margin:0 0 4px;font-size:24px}.hero p{margin:0;font-size:14px;opacity:.86}
+.control,.holes,.stat{background:var(--card);border:1px solid var(--line)}.control{border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-weight:700;margin-bottom:8px}input[type=time]{width:100%;font:inherit;font-size:22px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;color:var(--text)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.stat{border-radius:14px;padding:11px 6px;text-align:center}
+.stat small{display:block;color:var(--muted);font-size:11px;margin-bottom:3px}.stat strong{font-size:16px;white-space:nowrap}
+.title{font-size:15px;font-weight:700;margin:14px 2px 7px}.holes{border-radius:16px;overflow:hidden}
+.hole{display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:8px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.hole:last-child{border-bottom:0}.turn{background:var(--turn)}.finish{background:var(--finish)}
+.num{width:34px;height:34px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:800}.mins{color:var(--muted);font-size:13px}.time{font-size:18px;font-weight:800}
+.footer{margin:14px 4px 0;font-size:12px;color:var(--muted);text-align:center;line-height:1.4}
+</style>
+</head>
+<body>
+<main class="app">
+<section class="hero"><h1>Target Pace of Play</h1><p>4:12 target round • hole completion times</p></section>
+<section class="control"><label for="tee">Round start time</label><input id="tee" type="time" value="08:00"></section>
+<section class="stats"><div class="stat"><small>Front 9</small><strong id="front">10:02 AM</strong></div><div class="stat"><small>Finish</small><strong id="finish">12:12 PM</strong></div><div class="stat"><small>Target</small><strong>4:12</strong></div></section>
+<div class="title">Front 9</div><section id="frontHoles" class="holes"></section>
+<div class="title">Back 9</div><section id="backHoles" class="holes"></section>
+<p class="footer">Hole 9 target: 2:02 elapsed • Hole 18 target: 4:12 elapsed</p>
+</main>
+<script>
+const mins=[17,13,13,13,14,11,13,11,17,19,11,17,11,13,17,11,14,17];
+const cum=[];mins.reduce((s,m)=>{s+=m;cum.push(s);return s},0);
+const tee=document.getElementById('tee'),fh=document.getElementById('frontHoles'),bh=document.getElementById('backHoles');
+function clock(t){t=((t%1440)+1440)%1440;let h=Math.floor(t/60),m=t%60,s=h>=12?'PM':'AM';h%=12;if(!h)h=12;return `${h}:${String(m).padStart(2,'0')} ${s}`}
+function row(i,start){let h=i+1,c=h===9?'hole turn':h===18?'hole finish':'hole';return `<div class="${c}"><div class="num">${h}</div><div class="mins">${mins[i]} min hole</div><div class="time">${clock(start+cum[i])}</div></div>`}
+function update(){if(!tee.value)return;let [h,m]=tee.value.split(':').map(Number),start=h*60+m;fh.innerHTML=cum.slice(0,9).map((_,i)=>row(i,start)).join('');bh.innerHTML=cum.slice(9).map((_,j)=>row(j+9,start)).join('');document.getElementById('front').textContent=clock(start+cum[8]);document.getElementById('finish').textContent=clock(start+cum[17])}
+tee.addEventListener('input',update);tee.addEventListener('change',update);update();
+if('serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+</script>
+</body></html>
